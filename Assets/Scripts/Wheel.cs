@@ -16,28 +16,61 @@ public class Wheel : MonoBehaviour
         public string winString;
     }
 
-    [Tooltip("degrees")]
-    [SerializeField] private float wheelArrowOffset;
+    [Header("Spin Settings")]
     [SerializeField] private int minSpins;
     [SerializeField] private int maxSpins;
     [Tooltip("degrees/sec")]
     [SerializeField] private float spinSpeed;
+
+    [Header("Wheel Content")]
+    [Tooltip("how many degrees the arrow is offset from 0")]
+    [SerializeField] private float wheelArrowOffset;
     [SerializeField] private List<WheelSlice> wheelSlices = new List<WheelSlice>();
+
+    [Header("References")]
     [SerializeField] private Transform wheelParent;
     [SerializeField] private GameObject slicePrefab;
 
-    private int _numSlices;
-    private float _sliceAngle;
+    private int _numSlices = 0;
+    private float _sliceAngle = 0f;
+    private bool _isSpinning = false;
+    private bool _isWheelValid = false;
 
     private void Start()
     {
-        GenerateSlices();
+        // Generate wheel slices
+        _isWheelValid = ValidateWheel();
+        if (_isWheelValid)
+            GenerateSlices();
+    }
+
+    private bool ValidateWheel()
+    {
+        // Ensure wheel is not empty
+        _numSlices = wheelSlices.Count;
+        if (_numSlices == 0)
+        {
+            Debug.LogWarning("Warning: Wheel is empty");
+            return false;
+        }
+
+        // Ensure drop rates add to 100%
+        float totalSum = 0f;
+        foreach (WheelSlice slice in wheelSlices)
+        {
+            totalSum += slice.dropRate;
+        }
+        if (totalSum != 1f)
+        {
+            Debug.LogWarning("Warning: Prize drop rates do not add up to 100%");
+            return false;
+        }
+
+        return true;
     }
 
     private void GenerateSlices()
     {
-        _numSlices = wheelSlices.Count;
-
         // Calculate the angle of each slice, based on the number of slices
         _sliceAngle = 360f / _numSlices;
         float halfAngle = _sliceAngle / 2f;
@@ -57,52 +90,90 @@ public class Wheel : MonoBehaviour
 
             // Rotate this slice according to its index
             float rotateAngle = i * _sliceAngle + halfAngle; // Center in the middle of the slice
-            // Invert the rotation so it follows our spin direction
+            // Flip the rotation so the order follows our spin direction
             newSlice.transform.Rotate(new Vector3(0f, 0f, -rotateAngle));
         }
     }
 
     public void Spin()
     {
+        if (!_isWheelValid)
+        {
+            Debug.Log("Wheel is not valid");
+            return;
+        }
+        if (_isSpinning)
+        {
+            Debug.Log("Spin is already in progress");
+            return;
+        }
+
         // Pick a weighted random prize
         int randomPrize = GetRandomPrize();
-
-        SpinToSlice(randomPrize);
+        if (randomPrize >= 0 && randomPrize < _numSlices) // Sanity check in case we get an out of range value
+            SpinToSlice(randomPrize);
     }
 
-    private void SpinToSlice(int i)
+    private int GetRandomPrize()
     {
-        // Find slice i and rotate the wheel to a random point in it
-        float targetAngle = GetRandomSpinAngleToSlice(i);
-        Debug.Log("Target Angle: " + targetAngle);
+        // Retrieve a weighted random prize
+        float rand = Random.Range(0f, 1f); // Get a random percentage
+        for (int i=0; i< _numSlices; i++)
+        {
+            // If our random percentage falls within this prize's range, return it
+            if (rand < wheelSlices[i].dropRate)
+            {
+                return i;
+            }
+            rand -= wheelSlices[i].dropRate;
+        }
+
+        return -1; // This should never be possible
+    }
+
+    private void SpinToSlice(int prizeIndex)
+    {
+        _isSpinning = true;
+
+        // Find the slice associatd with this prize and rotate the wheel to a random point in it
+        float targetAngle = GetRandomSpinAngleToSlice(prizeIndex);
 
         // Rotate to target spin angle
         wheelParent.DORotate(Vector3.forward * targetAngle, spinSpeed, RotateMode.FastBeyond360)
             .SetSpeedBased()
             .SetEase(Ease.OutCirc)
-            .OnComplete(() => LogReward(i));
+            .OnComplete(() => EndSpin(prizeIndex)); // Take care of any logic cleanup
     }
 
-    private void LogReward(int i)
-    {
-        Debug.Log("You won " + wheelSlices[i].winString);
-    }
-    
-    private int GetRandomPrize()
-    {
-        // TODO - implement weighted random alg
-        return Random.Range(1, _numSlices);
-    }
-
-    private float GetRandomSpinAngleToSlice(int i)
+    private float GetRandomSpinAngleToSlice(int prizeIndex)
     {
         // Make a random number of full spins
         int numSpins = Random.Range(minSpins, maxSpins);
         // Spin to the correct slice
-        float angleToSlice = _sliceAngle * i;
+        float angleToSlice = _sliceAngle * prizeIndex;
         // Spin to a random point within the slice
         float randomAngleInSlice = Random.Range(wheelArrowOffset, _sliceAngle);
 
         return numSpins * 360 + angleToSlice + randomAngleInSlice;
     }
+
+    private void EndSpin(int prizeIndex)
+    {
+        _isSpinning = false;
+
+        Debug.Log("You won " + GetReward(prizeIndex));
+    }
+
+    private string GetReward(int prizeIndex)
+    {
+        return wheelSlices[prizeIndex].winString;
+    }
+
 }
+
+// UnitTest outline
+
+// Keep a dictionary of prize history
+// For each new prize:
+//      If rewardString already exists as a key, value++
+//      If it doesn't exist, create and set value to 1
