@@ -9,6 +9,17 @@ public class Wheel : MonoBehaviour
     [System.Serializable]
     public struct WheelSlice
     {
+#if UNITY_EDITOR
+        // Constructor for Unit Testing
+        public WheelSlice(string winString, float dropRate, string UIText = "", Sprite icon = null)
+        {
+            this.icon = icon;
+            this.UIText = UIText;
+            this.dropRate = dropRate;
+            this.winString = winString;
+        }
+#endif
+
         public Sprite icon;
         public string UIText;
         [Range(0f, 1f)]
@@ -38,20 +49,29 @@ public class Wheel : MonoBehaviour
 
     private void Start()
     {
-        // Generate wheel slices
-        _isWheelValid = ValidateWheel();
-        if (_isWheelValid)
-            GenerateSlices();
+        // Ensure wheel is set up properly
+        ValidateWheel();
+
+        if (IsWheelValid())
+        {
+            InitializeWheel(); // Initialize variables
+            GenerateSlices(); // Draw our slices in the scene
+        }
     }
 
-    private bool ValidateWheel()
+    public void SetTestSlices(List<WheelSlice> testSlices)
     {
+        wheelSlices = testSlices;
+    }
+
+    public void ValidateWheel()
+    {
+        bool isValid = true;
         // Ensure wheel is not empty
-        _numSlices = wheelSlices.Count;
-        if (_numSlices == 0)
+        if (wheelSlices.Count == 0)
         {
             Debug.LogWarning("Warning: Wheel is empty");
-            return false;
+            isValid = false;
         }
 
         // Ensure drop rates add to 100%
@@ -63,16 +83,24 @@ public class Wheel : MonoBehaviour
         if (totalSum != 1f)
         {
             Debug.LogWarning("Warning: Prize drop rates do not add up to 100%");
-            return false;
+            isValid = false;
         }
 
-        return true;
+        _isWheelValid = isValid;
+    }
+
+    public void InitializeWheel()
+    {
+        _numSlices = wheelSlices.Count;
+        _sliceAngle = 360f / _numSlices;
     }
 
     private void GenerateSlices()
     {
+        if (slicePrefab == null)
+            return;
+
         // Calculate the angle of each slice, based on the number of slices
-        _sliceAngle = 360f / _numSlices;
         float halfAngle = _sliceAngle / 2f;
 
         // Create our slices
@@ -110,9 +138,15 @@ public class Wheel : MonoBehaviour
 
         // Pick a weighted random prize
         int randomPrize = GetRandomPrize();
-        if (randomPrize >= 0 && randomPrize < _numSlices) // Sanity check in case we get an out of range value
+        if (randomPrize >= 0 && randomPrize < _numSlices) // Sanity check in case we get an out-of-range value
             SpinToSlice(randomPrize);
     }
+#if UNITY_EDITOR
+    public float SpinToPrizeAndGetFinalAngle(int prizeIndex) // Wrapper for unit tests
+    {
+        return GetRandomSpinAngleToSlice(prizeIndex);
+    }
+#endif
 
     private int GetRandomPrize()
     {
@@ -164,11 +198,20 @@ public class Wheel : MonoBehaviour
         Debug.Log("You won " + GetReward(prizeIndex));
     }
 
-    private string GetReward(int prizeIndex)
+    public string GetReward(int prizeIndex)
     {
         return wheelSlices[prizeIndex].winString;
     }
 
+    public bool IsWheelValid()
+    {
+        return _isWheelValid;
+    }
+
+    public float GetWheelArrowOffset()
+    {
+        return wheelArrowOffset;
+    }
 }
 
 // UnitTest outline
