@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 public class SpinButton : MonoBehaviour
 {
-    [SerializeField] Wheel wheel;
+    [SerializeField] WheelSpinner wheel;
     private void OnTouchPress()
     {
         wheel.Spin();

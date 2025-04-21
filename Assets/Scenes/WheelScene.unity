@@ -671,7 +671,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8fc8af6e88e3d3479d58c70c2d45a8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wheel: {fileID: 1710438478}
+  wheel: {fileID: 1710438479}
 --- !u!114 &1029157982
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -887,6 +887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1710438477}
   - component: {fileID: 1710438478}
+  - component: {fileID: 1710438479}
   m_Layer: 0
   m_Name: Wheel
   m_TagString: Untagged
@@ -924,10 +925,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dc74536ac0273745bd81ba77e0a4a5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minSpins: 3
-  maxSpins: 10
-  spinSpeed: 360
-  wheelArrowOffset: 3
   wheelSlices:
   - icon: {fileID: 21300000, guid: 6a3e4be9f999db24d9a162cba443a8e7, type: 3}
     UIText: 30min
@@ -963,6 +960,24 @@ MonoBehaviour:
     winString: Hammer 1X
   wheelParent: {fileID: 1644268816}
   slicePrefab: {fileID: 2851734049038773894, guid: d1d536cf2609338488a6e3606211939d, type: 3}
+--- !u!114 &1710438479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710438476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f8ba1b8e97527047a21bf0a4a2e0625, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minSpins: 3
+  maxSpins: 10
+  spinSpeed: 360
+  wheelArrowOffset: 3
+  wheelObject: {fileID: 1644268816}
+  wheelInfo: {fileID: 1710438478}
 --- !u!1 &1941328605
 GameObject:
   m_ObjectHideFlags: 0
