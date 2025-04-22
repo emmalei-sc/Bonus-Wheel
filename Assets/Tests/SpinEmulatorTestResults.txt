@@ -1,10 +1,10 @@
 	Prize			Count
 ----------------------------
-Life 30 min			207
-Brush 3X			104
-Gems 35			106
-Hammer 3X			107
-Coins 750			41
-Brush 1X			187
-Gems 75			50
-Hammer 1X			198
+Life 30 min			188
+Brush 3X			87
+Gems 35			98
+Hammer 3X			97
+Coins 750			58
+Brush 1X			202
+Gems 75			59
+Hammer 1X			211
